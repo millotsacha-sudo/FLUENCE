@@ -737,7 +737,7 @@ async function garderEcranAllume(actif) {
     evenementsVerrou.push({ type: 'acquis', t: new Date().toISOString() });
     journal('Wake lock acquis', 'ok');
     verrou.addEventListener('release', () => {
-      evenementsVerrou.push({ type: 'relache', t: new Date().toISOString(), visible: document.visibilityState });
+      evenementsVerrou.push({ type: 'relache', t: new Date().toISOString(), visible: document.visibilityState, subi: verrouVoulu });
       journal('Wake lock relâché (visibilité : ' + document.visibilityState + ')', 'warn');
     });
     return true;
@@ -1121,7 +1121,7 @@ async function t7() {
     plusGrosTrouHorlogeMs: plusGrosTrouMs,
     evenementsWakeLock: evenementsVerrou.slice(),
     visibilite,
-    ecranResteAllume: acquis && !evenementsVerrou.some((e) => e.type === 'relache' && e.visible === 'visible') && plusGrosTrouMs < 5000
+    ecranResteAllume: acquis && !evenementsVerrou.some((e) => e.type === 'relache' && e.subi) && plusGrosTrouMs < 5000
   });
   enregistrerTest('t7', t7, 'partiel');
   afficherT7();
