@@ -1,0 +1,1313 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black">
+<meta name="apple-mobile-web-app-title" content="Fluence spike">
+<meta name="theme-color" content="#000000">
+<title>Fluence · Spike iPhone</title>
+<style>
+/* ============ Variables ============ */
+:root {
+  --color-bg: #000;
+  --color-surface: #141414;
+  --color-border: #2a2a2a;
+  --color-text: #f2f2f2;
+  --color-muted: #9a9a9a;
+  --color-accent: #4da3ff;
+  --color-ok: #3ecf6e;
+  --color-ko: #ff5a5a;
+  --color-warn: #ffb020;
+  --color-listen: #0f5132;
+  --color-speak: #0b3a6b;
+  --radius: 0.75rem;
+}
+
+/* ============ Base ============ */
+*, *::before, *::after { box-sizing: border-box; }
+html { -webkit-text-size-adjust: 100%; }
+body {
+  margin: 0;
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 1rem;
+  line-height: 1.4;
+}
+h1, h2, h3, p { margin: 0; }
+button, input, select, textarea { font: inherit; color: inherit; }
+
+/* ============ Utilitaires Client-First ============ */
+.page-wrapper { overflow-x: hidden; }
+.main-wrapper { display: block; }
+.padding-global { padding-left: 1rem; padding-right: 1rem; padding-left: max(1rem, env(safe-area-inset-left)); padding-right: max(1rem, env(safe-area-inset-right)); }
+.container-small { width: 100%; max-width: 40rem; margin-left: auto; margin-right: auto; }
+.padding-section-small { padding-top: 1.5rem; padding-bottom: 1.5rem; }
+.text-size-large { font-size: 1.5rem; }
+.text-size-medium { font-size: 1.125rem; }
+.text-size-small { font-size: 0.875rem; }
+.text-size-tiny { font-size: 0.75rem; }
+.text-weight-bold { font-weight: 700; }
+.text-weight-semibold { font-weight: 600; }
+.text-color-muted { color: var(--color-muted); }
+.text-align-center { text-align: center; }
+.margin-top { margin-top: 0; }
+.margin-bottom { margin-bottom: 0; }
+.margin-xsmall { margin: 0.5rem; }
+.margin-small { margin: 1rem; }
+.margin-top.margin-xsmall { margin: 0.5rem 0 0 0; }
+.margin-top.margin-small { margin: 1rem 0 0 0; }
+.margin-bottom.margin-xsmall { margin: 0 0 0.5rem 0; }
+.margin-bottom.margin-small { margin: 0 0 1rem 0; }
+.hide { display: none !important; }
+
+/* ============ Composant : en-tête ============ */
+.spike_header { display: flex; flex-direction: column; gap: 0.5rem; }
+.spike_meta { font-family: ui-monospace, Menlo, monospace; word-break: break-word; }
+
+/* ============ Composant : carte de test ============ */
+.spike_card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  padding: 1rem;
+  margin-top: 1rem;
+}
+.spike_card-title { display: flex; justify-content: space-between; align-items: baseline; gap: 0.5rem; }
+.spike_badge {
+  font-size: 0.75rem; font-weight: 700; padding: 0.125rem 0.5rem; border-radius: 999px;
+  background: var(--color-border); color: var(--color-muted); white-space: nowrap;
+}
+.spike_badge.is-ok { background: var(--color-ok); color: #000; }
+.spike_badge.is-ko { background: var(--color-ko); color: #000; }
+.spike_badge.is-partial { background: var(--color-warn); color: #000; }
+.spike_actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.75rem; }
+
+/* ============ Composant : boutons ============ */
+.spike_button {
+  flex: 1 1 10rem;
+  min-height: 3.5rem;
+  padding: 0.75rem 1rem;
+  border: 0;
+  border-radius: var(--radius);
+  background: var(--color-accent);
+  color: #000;
+  font-weight: 700;
+  font-size: 1.0625rem;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+.spike_button:active { transform: scale(0.98); }
+.spike_button:disabled { opacity: 0.35; }
+.spike_button.is-secondary { background: var(--color-border); color: var(--color-text); }
+.spike_button.is-danger { background: var(--color-ko); }
+.spike_button.is-small { min-height: 2.5rem; flex: 0 0 auto; font-size: 0.875rem; }
+
+/* ============ Composant : champs ============ */
+.spike_field { display: flex; flex-direction: column; gap: 0.25rem; margin-top: 0.75rem; }
+.spike_input, .spike_select, .spike_textarea {
+  width: 100%;
+  padding: 0.625rem 0.75rem;
+  background: #000;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  font-size: 1rem; /* 16 px minimum : évite le zoom automatique d'iOS */
+}
+.spike_textarea { min-height: 5rem; resize: vertical; }
+.spike_check { display: flex; align-items: center; gap: 0.5rem; margin-top: 0.5rem; }
+.spike_check input { width: 1.5rem; height: 1.5rem; }
+
+/* ============ Composant : zone d'état (grand affichage) ============ */
+.spike_stage {
+  margin-top: 0.75rem;
+  border-radius: var(--radius);
+  background: #000;
+  border: 1px solid var(--color-border);
+  padding: 1rem;
+  text-align: center;
+  min-height: 7rem;
+  display: flex; flex-direction: column; justify-content: center; gap: 0.25rem;
+}
+.spike_stage.is-speaking { background: var(--color-speak); }
+.spike_stage.is-listening { background: var(--color-listen); }
+.spike_stage-word { font-size: 2.25rem; font-weight: 800; word-break: break-word; }
+.spike_stage-transcript { font-size: 0.9375rem; color: var(--color-muted); min-height: 1.3em; }
+
+/* ============ Composant : résultats ============ */
+.spike_result {
+  margin-top: 0.75rem;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 0.8125rem;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--color-muted);
+}
+.spike_list { list-style: none; padding: 0; margin: 0.75rem 0 0 0; font-size: 0.875rem; }
+.spike_list-item { display: flex; justify-content: space-between; gap: 0.5rem; padding: 0.375rem 0; border-bottom: 1px solid var(--color-border); align-items: center; }
+.spike_list-item.is-ok .spike_list-mark { color: var(--color-ok); }
+.spike_list-item.is-ko .spike_list-mark { color: var(--color-ko); }
+.spike_list-mark { font-weight: 700; background: none; border: 1px solid var(--color-border); border-radius: 0.375rem; min-width: 2.5rem; min-height: 2.25rem; }
+
+/* ============ Composant : journal ============ */
+.spike_log {
+  margin-top: 0.75rem;
+  height: 16rem;
+  overflow-y: auto;
+  background: #000;
+  border: 1px solid var(--color-border);
+  border-radius: 0.5rem;
+  padding: 0.5rem;
+  font-family: ui-monospace, Menlo, monospace;
+  font-size: 0.6875rem;
+  line-height: 1.35;
+  -webkit-overflow-scrolling: touch;
+}
+.spike_log-line.is-error { color: var(--color-ko); }
+.spike_log-line.is-warn { color: var(--color-warn); }
+.spike_log-line.is-ok { color: var(--color-ok); }
+</style>
+</head>
+<body>
+<div class="page-wrapper">
+  <main class="main-wrapper">
+
+    <!-- ============ En-tête ============ -->
+    <section class="section_header">
+      <div class="padding-global">
+        <div class="container-small">
+          <div class="padding-section-small">
+            <div class="spike_header">
+              <h1 class="text-size-large text-weight-bold">Fluence · Spike iPhone</h1>
+              <p class="text-size-small text-color-muted">Phase 0. Chaque test enregistre ses résultats sur ce téléphone. À la fin : « Copier le rapport », puis colle le JSON dans spike-report.md.</p>
+              <p class="spike_meta text-size-tiny text-color-muted" data-meta></p>
+            </div>
+            <div class="spike_actions">
+              <button class="spike_button" data-action="copy">Copier le rapport</button>
+              <button class="spike_button is-secondary" data-action="unlock">Activer son et micro</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="section_tests">
+      <div class="padding-global">
+        <div class="container-small">
+
+          <!-- ============ T1 Voix ============ -->
+          <article class="spike_card" data-test="t1">
+            <div class="spike_card-title"><h2 class="text-size-medium text-weight-bold">T1 · Voix</h2><span class="spike_badge" data-badge="t1">à faire</span></div>
+            <p class="text-size-small text-color-muted margin-top margin-xsmall">Liste les voix françaises, puis lit 10 phrases. On compte les <code>onend</code> reçus.</p>
+            <div class="spike_field">
+              <label class="text-size-small" for="t1-voice">Voix utilisée pour tous les tests</label>
+              <select class="spike_select" id="t1-voice" data-voice-select><option value="">Défaut système (fr-FR)</option></select>
+            </div>
+            <div class="spike_actions">
+              <button class="spike_button is-secondary" data-action="t1-list">Lister les voix</button>
+              <button class="spike_button" data-action="t1-run">Lire 10 phrases</button>
+            </div>
+            <div class="spike_result" data-result="t1"></div>
+          </article>
+
+          <!-- ============ Zone de scène commune ============ -->
+          <article class="spike_card">
+            <div class="spike_card-title"><h2 class="text-size-medium text-weight-bold">Scène</h2><span class="spike_badge" data-stage-state>repos</span></div>
+            <div class="spike_stage" data-stage>
+              <div class="spike_stage-word" data-stage-word>—</div>
+              <div class="spike_stage-transcript" data-stage-transcript></div>
+            </div>
+            <div class="spike_actions">
+              <button class="spike_button is-danger" data-action="abort">Arrêter le test en cours</button>
+            </div>
+          </article>
+
+          <!-- ============ T2 / T9 Liste de mots ============ -->
+          <article class="spike_card" data-test="t2">
+            <div class="spike_card-title"><h2 class="text-size-medium text-weight-bold">T2 · Reconnaissance au calme</h2><span class="spike_badge" data-badge="t2">à faire</span></div>
+            <p class="text-size-small text-color-muted margin-top margin-xsmall">20 mots. Manuel : un toucher par mot, tu lis le mot affiché. Automatique : la voix annonce le mot, signal, tu le répètes (6 s), sans toucher.</p>
+            <div class="spike_actions">
+              <button class="spike_button" data-action="t2-manual">Manuel</button>
+              <button class="spike_button is-secondary" data-action="t2-auto">Automatique</button>
+            </div>
+            <div class="spike_actions hide" data-next-word="t2">
+              <button class="spike_button" data-action="t2-next">Écouter ce mot</button>
+            </div>
+            <div class="spike_result" data-result="t2"></div>
+            <ul class="spike_list" data-list="t2"></ul>
+          </article>
+
+          <!-- ============ T3 Fenêtre de 60 s ============ -->
+          <article class="spike_card" data-test="t3">
+            <div class="spike_card-title"><h2 class="text-size-medium text-weight-bold">T3 · Fenêtre de 60 s</h2><span class="spike_badge" data-badge="t3">à faire</span></div>
+            <p class="text-size-small text-color-muted margin-top margin-xsmall">Parle sans arrêt pendant 60 s (énumère des animaux, par exemple), avec des pauses de 2 à 3 s de temps en temps. A : <code>continuous=true</code> sans relance. B : relances automatiques à chaque <code>end</code>.</p>
+            <div class="spike_actions">
+              <button class="spike_button" data-action="t3-a">A · continu</button>
+              <button class="spike_button" data-action="t3-b">B · relances</button>
+            </div>
+            <div class="spike_result" data-result="t3"></div>
+          </article>
+
+          <!-- ============ T4 Chaîne sans les mains ============ -->
+          <article class="spike_card" data-test="t4">
+            <div class="spike_card-title"><h2 class="text-size-medium text-weight-bold">T4 · Chaîne sans les mains</h2><span class="spike_badge" data-badge="t4">à faire</span></div>
+            <p class="text-size-small text-color-muted margin-top margin-xsmall">Test bloquant. Un seul toucher, puis 10 cycles : voix → signal → écoute 8 s → voix. Ne touche plus l'écran. Dis un mot à chaque signal.</p>
+            <div class="spike_actions">
+              <button class="spike_button" data-action="t4-run">Lancer 10 cycles</button>
+            </div>
+            <div class="spike_result" data-result="t4"></div>
+          </article>
+
+          <!-- ============ T5 Alternatives ============ -->
+          <article class="spike_card" data-test="t5">
+            <div class="spike_card-title"><h2 class="text-size-medium text-weight-bold">T5 · Alternatives</h2><span class="spike_badge" data-badge="t5">à faire</span></div>
+            <p class="text-size-small text-color-muted margin-top margin-xsmall"><code>maxAlternatives = 5</code>. Dis « sérendipité ». Le maximum observé sur tous les tests est aussi relevé.</p>
+            <div class="spike_actions">
+              <button class="spike_button" data-action="t5-run">Écouter</button>
+            </div>
+            <div class="spike_result" data-result="t5"></div>
+          </article>
+
+          <!-- ============ T6 Majuscules ============ -->
+          <article class="spike_card" data-test="t6">
+            <div class="spike_card-title"><h2 class="text-size-medium text-weight-bold">T6 · Majuscules</h2><span class="spike_badge" data-badge="t6">à faire</span></div>
+            <p class="text-size-small text-color-muted margin-top margin-xsmall">Dis : « Paris, pomme, Pierre, poire ».</p>
+            <div class="spike_actions">
+              <button class="spike_button" data-action="t6-run">Écouter</button>
+            </div>
+            <div class="spike_result" data-result="t6"></div>
+          </article>
+
+          <!-- ============ T7 Écran et batterie ============ -->
+          <article class="spike_card" data-test="t7">
+            <div class="spike_card-title"><h2 class="text-size-medium text-weight-bold">T7 · Écran et batterie</h2><span class="spike_badge" data-badge="t7">à faire</span></div>
+            <p class="text-size-small text-color-muted margin-top margin-xsmall">À faire deux fois : dans un onglet Safari, puis depuis l'icône sur l'écran d'accueil. Mode Économie d'énergie désactivé, verrouillage auto laissé à sa valeur habituelle. Ne touche pas l'écran pendant 30 min.</p>
+            <p class="text-size-small margin-top margin-xsmall">Mode détecté : <strong data-display-mode></strong></p>
+            <div class="spike_field">
+              <label class="text-size-small" for="t7-start">Batterie au départ (%)</label>
+              <input class="spike_input" id="t7-start" type="number" inputmode="numeric" min="0" max="100" data-t7-start>
+            </div>
+            <div class="spike_actions">
+              <button class="spike_button" data-action="t7-run">Lancer 30 min</button>
+            </div>
+            <div class="spike_field">
+              <label class="text-size-small" for="t7-end">Batterie à la fin (%)</label>
+              <input class="spike_input" id="t7-end" type="number" inputmode="numeric" min="0" max="100" data-t7-end>
+            </div>
+            <div class="spike_actions">
+              <button class="spike_button is-secondary" data-action="t7-save">Enregistrer la batterie</button>
+            </div>
+            <div class="spike_result" data-result="t7"></div>
+          </article>
+
+          <!-- ============ T8 AirPods ============ -->
+          <article class="spike_card" data-test="t8">
+            <div class="spike_card-title"><h2 class="text-size-medium text-weight-bold">T8 · Écouteurs</h2><span class="spike_badge" data-badge="t8">à faire</span></div>
+            <p class="text-size-small text-color-muted margin-top margin-xsmall">1. Volume : la voix lit une phrase, écoute 4 s (dis quelque chose), relit la même phrase. Compare les deux volumes. 2. Bouton de tige : active la session média, puis appuie sur la tige (simple, double, triple). Les appuis reçus s'affichent dans le journal.</p>
+            <div class="spike_actions">
+              <button class="spike_button" data-action="t8-volume">Test volume</button>
+              <button class="spike_button is-secondary" data-action="t8-media">Activer session média</button>
+            </div>
+            <div class="spike_field">
+              <label class="text-size-small" for="t8-model">Modèle d'écouteurs</label>
+              <input class="spike_input" id="t8-model" type="text" data-t8="modele">
+            </div>
+            <label class="spike_check text-size-small"><input type="checkbox" data-t8="microEcouteurs"> Le micro des écouteurs est utilisé (pas celui de l'iPhone)</label>
+            <label class="spike_check text-size-small"><input type="checkbox" data-t8="volumeBaisse"> La 2ᵉ lecture est plus faible que la 1ʳᵉ</label>
+            <div class="spike_field">
+              <label class="text-size-small" for="t8-notes">Observations</label>
+              <textarea class="spike_textarea" id="t8-notes" data-t8="notes"></textarea>
+            </div>
+            <div class="spike_actions">
+              <button class="spike_button is-secondary" data-action="t8-save">Enregistrer T8</button>
+            </div>
+            <div class="spike_result" data-result="t8"></div>
+          </article>
+
+          <!-- ============ T9 Terrain ============ -->
+          <article class="spike_card" data-test="t9">
+            <div class="spike_card-title"><h2 class="text-size-medium text-weight-bold">T9 · Terrain</h2><span class="spike_badge" data-badge="t9">à faire</span></div>
+            <p class="text-size-small text-color-muted margin-top margin-xsmall">En forêt, en marchant, écouteurs. Mêmes 20 mots que T2. Le mode automatique évite de sortir le téléphone.</p>
+            <div class="spike_field">
+              <label class="text-size-small" for="t9-conditions">Conditions (vent, allure, réseau, écouteurs)</label>
+              <input class="spike_input" id="t9-conditions" type="text" data-t9-conditions>
+            </div>
+            <div class="spike_actions">
+              <button class="spike_button" data-action="t9-auto">Automatique</button>
+              <button class="spike_button is-secondary" data-action="t9-manual">Manuel</button>
+            </div>
+            <div class="spike_actions hide" data-next-word="t9">
+              <button class="spike_button" data-action="t9-next">Écouter ce mot</button>
+            </div>
+            <div class="spike_result" data-result="t9"></div>
+            <ul class="spike_list" data-list="t9"></ul>
+          </article>
+
+          <!-- ============ T10 Hors réseau ============ -->
+          <article class="spike_card" data-test="t10">
+            <div class="spike_card-title"><h2 class="text-size-medium text-weight-bold">T10 · Hors réseau</h2><span class="spike_badge" data-badge="t10">à faire</span></div>
+            <p class="text-size-small text-color-muted margin-top margin-xsmall">Active le mode avion (page déjà chargée), puis « Écouter » et dis un mot. Recommence en zone blanche réelle. Les passages en ligne / hors ligne sont journalisés en continu.</p>
+            <div class="spike_actions">
+              <button class="spike_button" data-action="t10-run">Écouter</button>
+            </div>
+            <div class="spike_field">
+              <label class="text-size-small" for="t10-spots">Endroits du parcours où la 4G décroche</label>
+              <textarea class="spike_textarea" id="t10-spots" data-t10-spots></textarea>
+            </div>
+            <div class="spike_actions">
+              <button class="spike_button is-secondary" data-action="t10-save">Enregistrer les notes</button>
+            </div>
+            <div class="spike_result" data-result="t10"></div>
+          </article>
+
+          <!-- ============ Journal ============ -->
+          <article class="spike_card">
+            <div class="spike_card-title"><h2 class="text-size-medium text-weight-bold">Journal</h2></div>
+            <div class="spike_log" data-log></div>
+            <div class="spike_actions">
+              <button class="spike_button" data-action="copy">Copier le rapport</button>
+              <button class="spike_button is-secondary" data-action="show-json">Afficher le JSON</button>
+              <button class="spike_button is-danger" data-action="reset">Effacer les résultats</button>
+            </div>
+            <textarea class="spike_textarea hide margin-top margin-small" data-json readonly></textarea>
+          </article>
+
+          <div class="padding-section-small"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+'use strict';
+
+/* =====================================================================
+   Constantes
+   ===================================================================== */
+const MOTS_TEST = ['obsolète', 'paradigme', 'itératif', 'trésorerie', 'arbitrage', 'heuristique',
+  'prépondérant', 'dichotomie', 'sérendipité', 'catalyseur', 'corroborer', 'galvaniser',
+  'circonscrire', 'entériner', 'pérenne', 'idoine', 'ubiquité', 'péremptoire', 'subsidiaire', 'vernaculaire'];
+
+const PHRASES_T1 = [
+  'Catégorie : les biais cognitifs. Soixante secondes.',
+  'Le mot était : obsolète. Répète-le.',
+  'Ça commence par O B. Trois syllabes.',
+  'Quatorze termes. Nouveau record.',
+  'Deux sur trois. Tu avais aussi : caduc, suranné.',
+  'Explique : retour sur investissement.',
+  'Aucun mot interdit. Soixante-dix mots.',
+  'Cycle deux terminé. Vingt et un mots trouvés.',
+  'Des mots qui commencent par P, comme pomme.',
+  'Trente minutes. On commence.'
+];
+
+const CLE_STOCKAGE = 'fluence-spike-v1';
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+const $ = (sel) => document.querySelector(sel);
+const $$ = (sel) => document.querySelectorAll(sel);
+
+/* =====================================================================
+   Rapport : un objet unique, sauvegardé à chaque modification.
+   Attention : Safari et la web app installée ont des stockages séparés.
+   ===================================================================== */
+const modeAffichage = (window.navigator.standalone || window.matchMedia('(display-mode: standalone)').matches)
+  ? 'webapp-ecran-accueil' : 'onglet-safari';
+
+let rapport = charger() || nouveauRapport();
+
+function nouveauRapport() {
+  return { version: 1, cree: new Date().toISOString(), tests: {}, reseau: [], maxAlternativesObserve: 0 };
+}
+function charger() {
+  try { return JSON.parse(localStorage.getItem(CLE_STOCKAGE)); } catch (e) { return null; }
+}
+function sauver() {
+  rapport.maj = new Date().toISOString();
+  rapport.environnement = {
+    userAgent: navigator.userAgent,
+    modeAffichage,
+    url: location.href,
+    speechRecognition: SR ? (window.SpeechRecognition ? 'SpeechRecognition' : 'webkitSpeechRecognition') : 'absent',
+    speechSynthesis: 'speechSynthesis' in window,
+    wakeLock: 'wakeLock' in navigator,
+    mediaSession: 'mediaSession' in navigator,
+    vibrate: 'vibrate' in navigator,
+    enLigne: navigator.onLine
+  };
+  try { localStorage.setItem(CLE_STOCKAGE, JSON.stringify(rapport)); } catch (e) { journal('Stockage local indisponible : ' + e.message, 'warn'); }
+}
+function enregistrerTest(id, donnees, statut) {
+  rapport.tests[id] = Object.assign({}, rapport.tests[id], donnees, { statut, date: new Date().toISOString() });
+  sauver();
+  afficherBadge(id, statut);
+}
+
+/* =====================================================================
+   Journal à l'écran (horodaté depuis le chargement)
+   ===================================================================== */
+const T_CHARGEMENT = performance.now();
+function journal(message, niveau) {
+  const t = ((performance.now() - T_CHARGEMENT) / 1000).toFixed(2).padStart(7, ' ');
+  const ligne = document.createElement('div');
+  ligne.className = 'spike_log-line' + (niveau ? ' is-' + niveau : '');
+  ligne.textContent = t + ' s  ' + message;
+  const log = $('[data-log]');
+  log.appendChild(ligne);
+  while (log.childNodes.length > 400) log.removeChild(log.firstChild);
+  log.scrollTop = log.scrollHeight;
+}
+
+/* =====================================================================
+   Affichage
+   ===================================================================== */
+const LIBELLES_STATUT = { ok: 'OK', ko: 'échec', partiel: 'partiel', fait: 'fait' };
+function afficherBadge(id, statut) {
+  const b = $('[data-badge="' + id + '"]');
+  if (!b) return;
+  b.textContent = LIBELLES_STATUT[statut] || statut || 'à faire';
+  b.classList.remove('is-ok', 'is-ko', 'is-partial');
+  if (statut === 'ok' || statut === 'fait') b.classList.add('is-ok');
+  else if (statut === 'ko') b.classList.add('is-ko');
+  else if (statut === 'partiel') b.classList.add('is-partial');
+}
+function afficherResultat(id, texte) { const el = $('[data-result="' + id + '"]'); if (el) el.textContent = texte; }
+
+function scene(etat, mot, transcription) {
+  const s = $('[data-stage]');
+  s.classList.remove('is-speaking', 'is-listening');
+  if (etat === 'parle') s.classList.add('is-speaking');
+  if (etat === 'ecoute') s.classList.add('is-listening');
+  $('[data-stage-state]').textContent = { parle: 'l\'app parle', ecoute: 'j\'écoute', repos: 'repos' }[etat] || etat;
+  if (mot !== undefined) $('[data-stage-word]').textContent = mot;
+  if (transcription !== undefined) $('[data-stage-transcript]').textContent = transcription;
+}
+
+/* =====================================================================
+   Normalisation minimale (comparaison mot attendu / transcription)
+   ===================================================================== */
+function normaliser(texte) {
+  return (texte || '').toLowerCase()
+    .replace(/œ/g, 'oe').replace(/æ/g, 'ae')
+    .normalize('NFD').replace(/[̀-ͯ]/g, '')
+    .replace(/[^a-z0-9]+/g, ' ').trim();
+}
+// Vrai si le mot attendu apparaît comme mot entier dans l'une des alternatives
+function contientMot(alternatives, attendu) {
+  const cible = ' ' + normaliser(attendu) + ' ';
+  return alternatives.some((a) => (' ' + normaliser(a) + ' ').includes(cible));
+}
+
+/* =====================================================================
+   Signaux sonores (Web Audio, aucun fichier)
+   ===================================================================== */
+let ctxAudio = null;
+function debloquerAudio() {
+  if (!ctxAudio) {
+    const AC = window.AudioContext || window.webkitAudioContext;
+    if (AC) ctxAudio = new AC();
+  }
+  if (ctxAudio && ctxAudio.state === 'suspended') ctxAudio.resume();
+  // Une lecture vide dans le geste débloque la synthèse vocale sur iOS
+  try { const u = new SpeechSynthesisUtterance(' '); u.volume = 0; speechSynthesis.speak(u); } catch (e) {}
+}
+function note(freq, debut, duree, volume) {
+  const t = ctxAudio.currentTime + debut;
+  const osc = ctxAudio.createOscillator();
+  const gain = ctxAudio.createGain();
+  osc.type = 'sine';
+  osc.frequency.value = freq;
+  // Enveloppe courte pour éviter les clics
+  gain.gain.setValueAtTime(0.0001, t);
+  gain.gain.exponentialRampToValueAtTime(volume || 0.4, t + 0.015);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + duree);
+  osc.connect(gain).connect(ctxAudio.destination);
+  osc.start(t);
+  osc.stop(t + duree + 0.02);
+}
+function signal(nom) {
+  if (!ctxAudio) return Promise.resolve();
+  if (ctxAudio.state === 'suspended') ctxAudio.resume();
+  const motifs = {
+    go: [[660, 0, 0.12], [990, 0.13, 0.16]],
+    end: [[990, 0, 0.12], [660, 0.13, 0.16]],
+    hit: [[1320, 0, 0.1]],
+    warn: [[880, 0, 0.05], [880, 0.12, 0.05], [880, 0.24, 0.05]],
+    error: [[220, 0, 0.15], [220, 0.2, 0.15], [220, 0.4, 0.15]]
+  };
+  const m = motifs[nom] || [];
+  m.forEach(([f, d, du]) => note(f, d, du));
+  const total = m.length ? Math.max(...m.map(([, d, du]) => d + du)) : 0;
+  return attendre(total * 1000 + 60);
+}
+const attendre = (ms) => new Promise((r) => setTimeout(r, ms));
+
+/* =====================================================================
+   Synthèse vocale
+   onend ne se déclenche pas toujours sur iOS : minuterie de secours
+   (≈ 70 ms par caractère + 1,5 s). Le résultat indique lequel a gagné.
+   ===================================================================== */
+let voixChoisie = null;
+function listerVoix() {
+  return new Promise((resolve) => {
+    let voix = speechSynthesis.getVoices();
+    if (voix.length) return resolve(voix);
+    const fini = () => resolve(speechSynthesis.getVoices());
+    speechSynthesis.addEventListener('voiceschanged', fini, { once: true });
+    setTimeout(fini, 2000);
+  });
+}
+function dire(texte) {
+  return new Promise((resolve) => {
+    const u = new SpeechSynthesisUtterance(texte);
+    u.lang = 'fr-FR';
+    if (voixChoisie) u.voice = voixChoisie;
+    const t0 = performance.now();
+    let regle = false;
+    const secours = setTimeout(() => terminer(false), texte.length * 70 + 1500);
+    function terminer(onend) {
+      if (regle) return;
+      regle = true;
+      clearTimeout(secours);
+      resolve({ onend, ms: Math.round(performance.now() - t0) });
+    }
+    u.onend = () => terminer(true);
+    u.onerror = (e) => { journal('TTS erreur : ' + e.error, 'error'); terminer(false); };
+    scene('parle', undefined, texte);
+    speechSynthesis.speak(u);
+  });
+}
+
+/* =====================================================================
+   Reconnaissance vocale : une fenêtre d'écoute.
+
+   Options :
+   - dureeMs    : durée maximale de la fenêtre
+   - continuous : valeur passée au moteur
+   - relance    : relancer automatiquement le moteur s'il s'arrête avant la fin
+   - unCoup     : résoudre dès le premier arrêt (écoute d'un seul mot)
+
+   Agrégation par cycle d'écoute : à chaque événement result, on reconstruit
+   l'état complet (event.results), ce qui marche que le moteur renvoie des
+   résultats incrémentaux ou cumulés. En fin de cycle, l'état est validé
+   comme segment ; s'il n'était pas final, il est marqué « promu »
+   (repli iOS : le dernier intermédiaire vaut final).
+   ===================================================================== */
+let ecouteEnCours = null; // permet au bouton « Arrêter » d'interrompre
+
+function ecouter(opts) {
+  const o = Object.assign({ dureeMs: 8000, continuous: false, interim: true, maxAlt: 5, relance: false, unCoup: false }, opts);
+  return new Promise((resolve) => {
+    const bilan = {
+      options: { dureeMs: o.dureeMs, continuous: o.continuous, interimResults: o.interim, maxAlternatives: o.maxAlt, relance: o.relance },
+      demarre: false, segments: [], erreurs: [], relances: 0, trousMs: [], finsSpontaneesMs: [],
+      evenementsResult: 0, intermediaires: 0, finals: 0, maxAlternatives: 0, resultats: [],
+      premierResultatMs: null, dureeReelleMs: 0
+    };
+    if (!SR) { bilan.erreurs.push({ code: 'absent', t: 0 }); return resolve(bilan); }
+
+    const t0 = performance.now();
+    const ms = () => Math.round(performance.now() - t0);
+    let rec = null;
+    let fenetreTerminee = false;
+    let resolu = false;
+    let tDerniereFin = null;
+    let cycle = null; // état du cycle d'écoute courant
+    let minuterieFenetre = null;
+    let minuterieSecours = null;
+
+    function validerCycle() {
+      if (cycle && cycle.texte) {
+        bilan.segments.push({ texte: cycle.texte, alternatives: cycle.alternatives, isFinal: cycle.isFinal, promu: !cycle.isFinal, tMs: cycle.t });
+      }
+      cycle = null;
+    }
+    function finir() {
+      if (resolu) return;
+      resolu = true;
+      clearTimeout(minuterieFenetre);
+      clearTimeout(minuterieSecours);
+      validerCycle();
+      bilan.dureeReelleMs = ms();
+      ecouteEnCours = null;
+      resolve(bilan);
+    }
+    function arreterFenetre() {
+      if (fenetreTerminee) return;
+      fenetreTerminee = true;
+      try { rec && rec.stop(); } catch (e) {}
+      // Attente des derniers résultats 1 500 ms max, puis abort
+      minuterieSecours = setTimeout(() => { try { rec && rec.abort(); } catch (e) {} finir(); }, 1500);
+    }
+
+    function lancer() {
+      rec = new SR();
+      rec.lang = 'fr-FR';
+      rec.continuous = o.continuous;
+      rec.interimResults = o.interim;
+      rec.maxAlternatives = o.maxAlt;
+
+      rec.onstart = () => {
+        bilan.demarre = true;
+        if (tDerniereFin !== null) { bilan.trousMs.push(ms() - tDerniereFin); tDerniereFin = null; }
+        journal('ASR start (' + ms() + ' ms)');
+      };
+      rec.onaudiostart = () => journal('ASR audiostart');
+      rec.onspeechstart = () => journal('ASR speechstart');
+      rec.onresult = (e) => {
+        bilan.evenementsResult++;
+        if (bilan.premierResultatMs === null) bilan.premierResultatMs = ms();
+        // Reconstruit l'état complet du cycle à partir de event.results
+        let texte = '';
+        let toutFinal = true;
+        for (let i = 0; i < e.results.length; i++) {
+          texte += (i ? ' ' : '') + e.results[i][0].transcript;
+          if (!e.results[i].isFinal) toutFinal = false;
+          bilan.maxAlternatives = Math.max(bilan.maxAlternatives, e.results[i].length);
+        }
+        // Alternatives du dernier résultat (cas d'un mot isolé : c'est le seul)
+        const dernier = e.results[e.results.length - 1];
+        const alternatives = [];
+        for (let j = 0; j < dernier.length; j++) alternatives.push(dernier[j].transcript.trim());
+        const estFinal = dernier.isFinal;
+        if (estFinal) bilan.finals++; else bilan.intermediaires++;
+        if (bilan.resultats.length < 200) {
+          bilan.resultats.push({ tMs: ms(), resultIndex: e.resultIndex, longueur: e.results.length, isFinal: estFinal, texte: texte.trim() });
+        }
+        cycle = { texte: texte.trim(), alternatives, isFinal: toutFinal, t: ms() };
+        scene('ecoute', undefined, texte.trim());
+        journal('ASR result ' + (estFinal ? 'FINAL' : 'interm.') + ' [' + e.resultIndex + '/' + e.results.length + '] « ' + texte.trim() + ' »', estFinal ? 'ok' : undefined);
+        if (o.onResultat) o.onResultat(cycle);
+      };
+      rec.onerror = (e) => {
+        bilan.erreurs.push({ code: e.error, message: e.message || '', tMs: ms() });
+        journal('ASR erreur : ' + e.error + (e.message ? ' (' + e.message + ')' : ''), e.error === 'no-speech' || e.error === 'aborted' ? 'warn' : 'error');
+      };
+      rec.onend = () => {
+        journal('ASR end (' + ms() + ' ms)');
+        validerCycle();
+        const fatale = bilan.erreurs.some((er) => ['not-allowed', 'service-not-allowed', 'network', 'audio-capture'].includes(er.code) && er.tMs >= ms() - 2000);
+        if (fenetreTerminee || resolu) return finir();
+        bilan.finsSpontaneesMs.push(ms());
+        if (o.unCoup || !o.relance || fatale) return finir();
+        // Relance automatique après 250 ms, sans geste utilisateur
+        tDerniereFin = ms();
+        setTimeout(() => {
+          if (fenetreTerminee || resolu) return;
+          bilan.relances++;
+          try { lancer(); } catch (err) { bilan.erreurs.push({ code: 'start-exception', message: err.message, tMs: ms() }); finir(); }
+        }, 250);
+      };
+
+      try {
+        rec.start();
+      } catch (err) {
+        bilan.erreurs.push({ code: 'start-exception', message: err.message, tMs: ms() });
+        journal('ASR start() a levé : ' + err.message, 'error');
+        finir();
+      }
+    }
+
+    ecouteEnCours = { stop: () => arreterFenetre() };
+    speechSynthesis.cancel(); // micro fermé pendant que l'app parle, et inversement
+    scene('ecoute', undefined, '');
+    minuterieFenetre = setTimeout(arreterFenetre, o.dureeMs);
+    lancer();
+  }).then((bilan) => {
+    rapport.maxAlternativesObserve = Math.max(rapport.maxAlternativesObserve || 0, bilan.maxAlternatives);
+    scene('repos');
+    return bilan;
+  });
+}
+
+/* =====================================================================
+   Wake lock (écran allumé) : réacquis au retour de visibilité
+   ===================================================================== */
+let verrou = null;
+let verrouVoulu = false;
+const evenementsVerrou = [];
+async function garderEcranAllume(actif) {
+  verrouVoulu = actif;
+  if (!('wakeLock' in navigator)) { journal('Wake Lock API absente', 'warn'); return false; }
+  if (!actif) { try { verrou && await verrou.release(); } catch (e) {} verrou = null; return true; }
+  try {
+    verrou = await navigator.wakeLock.request('screen');
+    evenementsVerrou.push({ type: 'acquis', t: new Date().toISOString() });
+    journal('Wake lock acquis', 'ok');
+    verrou.addEventListener('release', () => {
+      evenementsVerrou.push({ type: 'relache', t: new Date().toISOString(), visible: document.visibilityState });
+      journal('Wake lock relâché (visibilité : ' + document.visibilityState + ')', 'warn');
+    });
+    return true;
+  } catch (e) {
+    evenementsVerrou.push({ type: 'refus', t: new Date().toISOString(), message: e.message });
+    journal('Wake lock refusé : ' + e.message, 'error');
+    return false;
+  }
+}
+document.addEventListener('visibilitychange', () => {
+  journal('Visibilité : ' + document.visibilityState, document.visibilityState === 'hidden' ? 'warn' : undefined);
+  if (document.visibilityState === 'visible' && verrouVoulu && (!verrou || verrou.released)) garderEcranAllume(true);
+});
+
+/* =====================================================================
+   Réseau : journal continu des passages en ligne / hors ligne
+   ===================================================================== */
+function noterReseau(etat) {
+  rapport.reseau.push({ etat, t: new Date().toISOString() });
+  if (rapport.reseau.length > 200) rapport.reseau.shift();
+  sauver();
+  journal('Réseau : ' + etat, etat === 'hors-ligne' ? 'warn' : 'ok');
+}
+window.addEventListener('online', () => noterReseau('en-ligne'));
+window.addEventListener('offline', () => noterReseau('hors-ligne'));
+
+/* =====================================================================
+   Verrou d'exécution : un seul test à la fois
+   ===================================================================== */
+let testActif = null;
+let annulation = false;
+function demarrerTest(id) {
+  if (testActif) { journal('Test ' + testActif + ' déjà en cours', 'warn'); return false; }
+  debloquerAudio();
+  testActif = id;
+  annulation = false;
+  journal('— Début ' + id.toUpperCase() + ' —');
+  return true;
+}
+function finirTest() { testActif = null; scene('repos'); }
+
+/* =====================================================================
+   T1 · Voix
+   ===================================================================== */
+async function t1Lister() {
+  const voix = await listerVoix();
+  const fr = voix.filter((v) => /^fr/i.test(v.lang));
+  const select = $('[data-voice-select]');
+  select.innerHTML = '<option value="">Défaut système (fr-FR)</option>';
+  fr.forEach((v, i) => {
+    const opt = document.createElement('option');
+    opt.value = String(i);
+    opt.textContent = v.name + ' · ' + v.lang + (v.localService ? '' : ' · réseau') + (v.default ? ' · défaut' : '');
+    select.appendChild(opt);
+  });
+  select.onchange = () => {
+    voixChoisie = select.value === '' ? null : fr[Number(select.value)];
+    journal('Voix choisie : ' + (voixChoisie ? voixChoisie.name : 'défaut'));
+    rapport.voixChoisie = voixChoisie ? voixChoisie.name : 'défaut';
+    sauver();
+  };
+  const liste = fr.map((v) => ({ nom: v.name, lang: v.lang, locale: v.localService, defaut: v.default, uri: v.voiceURI }));
+  enregistrerTest('t1', { voixTotal: voix.length, voixFr: liste }, rapport.tests.t1 && rapport.tests.t1.onendSur10 !== undefined ? rapport.tests.t1.statut : 'partiel');
+  afficherResultat('t1', voix.length + ' voix au total, ' + fr.length + ' en français :\n' + liste.map((v) => '· ' + v.nom + ' (' + v.lang + ')').join('\n'));
+  journal('T1 : ' + fr.length + ' voix fr');
+}
+async function t1Lire() {
+  if (!demarrerTest('t1')) return;
+  const lectures = [];
+  for (let i = 0; i < PHRASES_T1.length && !annulation; i++) {
+    const r = await dire(PHRASES_T1[i]);
+    lectures.push(r);
+    journal('T1 lecture ' + (i + 1) + ' : ' + (r.onend ? 'onend reçu' : 'SECOURS') + ' en ' + r.ms + ' ms', r.onend ? 'ok' : 'warn');
+    await attendre(300);
+  }
+  const n = lectures.filter((l) => l.onend).length;
+  enregistrerTest('t1', { onendSur10: n, lectures, voixUtilisee: voixChoisie ? voixChoisie.name : 'défaut' }, n === 10 ? 'ok' : (n > 0 ? 'partiel' : 'ko'));
+  afficherResultat('t1', ($('[data-result="t1"]').textContent ? $('[data-result="t1"]').textContent + '\n\n' : '') + 'onend reçu : ' + n + ' / ' + lectures.length);
+  finirTest();
+}
+
+/* =====================================================================
+   T2 / T9 · Liste de 20 mots (manuel ou automatique)
+   ===================================================================== */
+const listes = { t2: null, t9: null };
+
+function afficherListe(id) {
+  const etat = listes[id];
+  const ul = $('[data-list="' + id + '"]');
+  ul.innerHTML = '';
+  etat.mots.forEach((m, i) => {
+    const li = document.createElement('li');
+    li.className = 'spike_list-item' + (m.correct === true ? ' is-ok' : m.correct === false ? ' is-ko' : '');
+    const txt = document.createElement('span');
+    txt.textContent = m.attendu + (m.entendu !== undefined ? ' → « ' + (m.entendu || '∅') + ' »' : '');
+    li.appendChild(txt);
+    if (m.correct !== undefined) {
+      // Toucher la marque inverse le verdict automatique (correction manuelle)
+      const b = document.createElement('button');
+      b.className = 'spike_list-mark';
+      b.textContent = m.correct ? '✓' : '✗';
+      b.onclick = () => { m.correct = !m.correct; m.corrigeManuellement = true; enregistrerListe(id); afficherListe(id); };
+      li.appendChild(b);
+    }
+    ul.appendChild(li);
+  });
+}
+function enregistrerListe(id) {
+  const etat = listes[id];
+  const faits = etat.mots.filter((m) => m.correct !== undefined);
+  const corrects = faits.filter((m) => m.correct).length;
+  const taux = faits.length ? Math.round((corrects / faits.length) * 100) : 0;
+  const donnees = { mode: etat.mode, corrects, testes: faits.length, tauxPct: taux, mots: etat.mots };
+  if (id === 't9') donnees.conditions = $('[data-t9-conditions]').value;
+  const complet = faits.length === MOTS_TEST.length;
+  enregistrerTest(id, donnees, !complet ? 'partiel' : (taux >= 80 ? 'ok' : 'ko'));
+  afficherResultat(id, 'Mode ' + etat.mode + ' · ' + corrects + ' / ' + faits.length + ' corrects (' + taux + ' %)' + (complet ? '' : ' · incomplet'));
+}
+// dansLeGeste : en mode manuel, recognition.start() doit partir dans le même
+// tour d'exécution que le toucher (activation utilisateur iOS) : le signal
+// go n'est donc pas attendu.
+async function ecouterMot(id, idx, dansLeGeste) {
+  const etat = listes[id];
+  const m = etat.mots[idx];
+  scene('ecoute', m.attendu, '');
+  if (dansLeGeste) signal('go'); else await signal('go');
+  const b = await ecouter({ dureeMs: 6000, continuous: false, unCoup: true });
+  await signal('end');
+  const alternatives = b.segments.flatMap((s) => s.alternatives.length ? s.alternatives : [s.texte]);
+  m.entendu = b.segments.map((s) => s.texte).join(' | ');
+  m.alternatives = alternatives;
+  m.correct = contientMot(alternatives, m.attendu);
+  m.promu = b.segments.some((s) => s.promu);
+  m.erreurs = b.erreurs.map((e) => e.code);
+  m.demarre = b.demarre;
+  m.latenceMs = b.premierResultatMs;
+  if (m.correct) signal('hit');
+  enregistrerListe(id);
+  afficherListe(id);
+}
+function initListe(id, mode) {
+  listes[id] = { mode, index: 0, mots: MOTS_TEST.map((w) => ({ attendu: w })) };
+  afficherListe(id);
+}
+async function listeManuelle(id) {
+  if (testActif) return journal('Un test est déjà en cours', 'warn');
+  debloquerAudio();
+  initListe(id, 'manuel');
+  $('[data-next-word="' + id + '"]').classList.remove('hide');
+  scene('repos', listes[id].mots[0].attendu, 'Touche « Écouter ce mot », puis lis-le');
+}
+async function listeMotSuivant(id) {
+  const etat = listes[id];
+  if (!etat || etat.index >= etat.mots.length) return;
+  if (!demarrerTest(id)) return;
+  await ecouterMot(id, etat.index, true);
+  etat.index++;
+  finirTest();
+  if (etat.index >= etat.mots.length) {
+    $('[data-next-word="' + id + '"]').classList.add('hide');
+    scene('repos', 'Terminé', '');
+  } else {
+    scene('repos', etat.mots[etat.index].attendu, 'Mot ' + (etat.index + 1) + ' / 20');
+  }
+}
+async function listeAuto(id) {
+  if (!demarrerTest(id)) return;
+  initListe(id, 'automatique');
+  $('[data-next-word="' + id + '"]').classList.add('hide');
+  await garderEcranAllume(true);
+  await dire('Vingt mots. Répète chaque mot après le signal.');
+  for (let i = 0; i < MOTS_TEST.length && !annulation; i++) {
+    scene('parle', MOTS_TEST[i], '');
+    await dire(MOTS_TEST[i]);
+    if (annulation) break;
+    await ecouterMot(id, i);
+    await attendre(400);
+  }
+  const e = listes[id];
+  const ok = e.mots.filter((m) => m.correct).length;
+  if (!annulation) await dire('Terminé. ' + ok + ' mots reconnus sur vingt.');
+  await garderEcranAllume(false);
+  finirTest();
+}
+
+/* =====================================================================
+   T3 · Fenêtre de 60 s
+   ===================================================================== */
+async function t3(variante) {
+  if (!demarrerTest('t3')) return;
+  scene('ecoute', '60 s', 'Parle sans arrêt');
+  signal('go');
+  // Signal warn à 10 s de la fin
+  const warn = setTimeout(() => signal('warn'), 50000);
+  // Premier start() dans le geste ; les relances de la variante B sont hors geste
+  const promesse = ecouter(variante === 'A'
+    ? { dureeMs: 60000, continuous: true, relance: false }
+    : { dureeMs: 60000, continuous: false, relance: true });
+  garderEcranAllume(true);
+  const b = await promesse;
+  clearTimeout(warn);
+  await signal('end');
+  await garderEcranAllume(false);
+  const mots = b.segments.map((s) => s.texte).join(' ').split(/\s+/).filter(Boolean).length;
+  const res = {
+    demarre: b.demarre,
+    finsSpontanees: b.finsSpontaneesMs.length,
+    finsSpontaneesMs: b.finsSpontaneesMs,
+    relances: b.relances,
+    trousMs: b.trousMs,
+    trouMoyenMs: b.trousMs.length ? Math.round(b.trousMs.reduce((a, c) => a + c, 0) / b.trousMs.length) : null,
+    intermediairesRecus: b.intermediaires,
+    finalsRecus: b.finals,
+    segmentsPromus: b.segments.filter((s) => s.promu).length,
+    motsTranscrits: mots,
+    dureeReelleMs: b.dureeReelleMs,
+    erreurs: b.erreurs,
+    segments: b.segments.map((s) => ({ texte: s.texte, isFinal: s.isFinal, tMs: s.tMs })),
+    evenementsResult: b.resultats
+  };
+  const t3 = Object.assign({}, rapport.tests.t3);
+  t3['variante' + variante] = res;
+  const statut = t3.varianteA && t3.varianteB ? 'fait' : 'partiel';
+  enregistrerTest('t3', t3, statut);
+  afficherResultat('t3', ['A', 'B'].filter((v) => t3['variante' + v]).map((v) => {
+    const r = t3['variante' + v];
+    return v + ' · end spontanés : ' + r.finsSpontanees + ' · relances : ' + r.relances +
+      ' · trou moyen : ' + (r.trouMoyenMs === null ? '—' : r.trouMoyenMs + ' ms') +
+      '\n    intermédiaires : ' + r.intermediairesRecus + ' · finals : ' + r.finalsRecus +
+      ' · promus : ' + r.segmentsPromus + ' · mots : ' + r.motsTranscrits +
+      (r.erreurs.length ? '\n    erreurs : ' + r.erreurs.map((e) => e.code).join(', ') : '');
+  }).join('\n'));
+  finirTest();
+}
+
+/* =====================================================================
+   T4 · Chaîne sans les mains
+   Seul le toucher sur « Lancer » est un geste utilisateur. Les 10 appels
+   suivants à recognition.start() sont faits par programme : c'est
+   exactement ce qu'on cherche à valider.
+   ===================================================================== */
+async function t4() {
+  if (!demarrerTest('t4')) return;
+  await garderEcranAllume(true);
+  const cycles = [];
+  await dire('Dix cycles. Ne touche plus l\'écran. Dis un mot à chaque signal.');
+  for (let i = 1; i <= 10 && !annulation; i++) {
+    scene('parle', 'Cycle ' + i, '');
+    const tts = await dire('Cycle ' + i + '. Un mot.');
+    await signal('go');
+    const b = await ecouter({ dureeMs: 8000, continuous: false, unCoup: true });
+    await signal('end');
+    const texte = b.segments.map((s) => s.texte).join(' ');
+    const bloquant = b.erreurs.find((e) => ['not-allowed', 'service-not-allowed', 'start-exception', 'audio-capture'].includes(e.code));
+    const cycle = {
+      cycle: i,
+      ttsOnend: tts.onend,
+      micDemarre: b.demarre,
+      resultatRecu: !!texte,
+      texte,
+      erreurs: b.erreurs.map((e) => e.code),
+      reussi: b.demarre && !bloquant
+    };
+    cycles.push(cycle);
+    journal('T4 cycle ' + i + ' : ' + (cycle.reussi ? 'micro OK' : 'ÉCHEC') + (texte ? ' · « ' + texte + ' »' : ''), cycle.reussi ? 'ok' : 'error');
+    await dire(texte ? 'Entendu : ' + texte + '.' : (cycle.reussi ? 'Rien entendu.' : 'Micro refusé.'));
+  }
+  const reussis = cycles.filter((c) => c.reussi).length;
+  const avecTexte = cycles.filter((c) => c.resultatRecu).length;
+  enregistrerTest('t4', { cyclesReussis: reussis, cyclesAvecTranscription: avecTexte, total: cycles.length, cycles },
+    reussis === 10 ? 'ok' : 'ko');
+  afficherResultat('t4', 'Micro relancé sans toucher : ' + reussis + ' / ' + cycles.length +
+    '\nTranscription reçue : ' + avecTexte + ' / ' + cycles.length);
+  if (!annulation) await dire('Terminé. ' + reussis + ' cycles réussis sur dix.');
+  await garderEcranAllume(false);
+  finirTest();
+}
+
+/* =====================================================================
+   T5 · Alternatives  /  T6 · Majuscules  /  T10 · Hors réseau
+   ===================================================================== */
+async function t5() {
+  if (!demarrerTest('t5')) return;
+  scene('ecoute', 'sérendipité', '');
+  signal('go');
+  const b = await ecouter({ dureeMs: 6000, continuous: false, unCoup: true, maxAlt: 5 });
+  await signal('end');
+  const alts = b.segments.flatMap((s) => s.alternatives);
+  enregistrerTest('t5', { maxAlternativesRenvoyees: b.maxAlternatives, alternatives: alts, maxObserveTousTests: rapport.maxAlternativesObserve, erreurs: b.erreurs },
+    b.maxAlternatives > 1 ? 'ok' : (b.demarre ? 'partiel' : 'ko'));
+  afficherResultat('t5', 'Alternatives renvoyées : ' + b.maxAlternatives + '\n' + alts.map((a) => '· ' + a).join('\n') +
+    '\nMaximum observé sur tous les tests : ' + rapport.maxAlternativesObserve);
+  finirTest();
+}
+async function t6() {
+  if (!demarrerTest('t6')) return;
+  scene('ecoute', 'Paris, pomme, Pierre, poire', '');
+  signal('go');
+  const b = await ecouter({ dureeMs: 8000, continuous: false, unCoup: true });
+  await signal('end');
+  const texte = b.segments.map((s) => s.texte).join(' ');
+  const mots = texte.split(/[\s,.;]+/).filter(Boolean);
+  const trouver = (w) => mots.find((m) => normaliser(m) === w);
+  const analyse = {
+    paris: trouver('paris') || null,
+    pomme: trouver('pomme') || null,
+    pierre: trouver('pierre') || null,
+    poire: trouver('poire') || null
+  };
+  const majuscule = (m) => !!m && m[0] === m[0].toUpperCase() && m[0] !== m[0].toLowerCase();
+  // Les noms propres sont capitalisés et les noms communs non (hors début de phrase)
+  const nomsPropresCapitalises = majuscule(analyse.paris) && majuscule(analyse.pierre);
+  const communsMinuscules = mots.indexOf(analyse.pomme) > 0 ? !majuscule(analyse.pomme) : null;
+  enregistrerTest('t6', { transcription: texte, alternatives: b.segments.flatMap((s) => s.alternatives), analyse, nomsPropresCapitalises, communsMinuscules, erreurs: b.erreurs },
+    texte ? 'fait' : 'ko');
+  afficherResultat('t6', 'Transcription : « ' + texte + ' »\nNoms propres capitalisés : ' + (nomsPropresCapitalises ? 'oui' : 'non') +
+    '\n« pomme » en minuscule : ' + (communsMinuscules === null ? 'indéterminé' : communsMinuscules ? 'oui' : 'non'));
+  finirTest();
+}
+async function t10() {
+  if (!demarrerTest('t10')) return;
+  const enLigne = navigator.onLine;
+  scene('ecoute', 'Un mot', enLigne ? 'navigator.onLine = true' : 'navigator.onLine = false');
+  signal('go');
+  const b = await ecouter({ dureeMs: 6000, continuous: false, unCoup: true });
+  await signal(b.erreurs.length ? 'error' : 'end');
+  const essai = {
+    t: new Date().toISOString(), navigatorOnLine: enLigne, micDemarre: b.demarre,
+    transcription: b.segments.map((s) => s.texte).join(' '), erreurs: b.erreurs, dureeMs: b.dureeReelleMs
+  };
+  const t10 = Object.assign({ essais: [] }, rapport.tests.t10);
+  t10.essais = (t10.essais || []).concat(essai);
+  enregistrerTest('t10', t10, 'fait');
+  afficherResultat('t10', t10.essais.map((e, i) => (i + 1) + '. onLine=' + e.navigatorOnLine + ' · erreurs : ' +
+    (e.erreurs.map((x) => x.code).join(', ') || 'aucune') + ' · « ' + (e.transcription || '∅') + ' » · ' + e.dureeMs + ' ms').join('\n'));
+  finirTest();
+}
+function t10Notes() {
+  const t10 = Object.assign({}, rapport.tests.t10, { zonesBlanches: $('[data-t10-spots]').value });
+  enregistrerTest('t10', t10, rapport.tests.t10 ? rapport.tests.t10.statut : 'partiel');
+  journal('T10 notes enregistrées', 'ok');
+}
+
+/* =====================================================================
+   T7 · Écran et batterie (30 min)
+   ===================================================================== */
+async function t7() {
+  if (!demarrerTest('t7')) return;
+  const dureeMs = 30 * 60 * 1000;
+  evenementsVerrou.length = 0;
+  const visibilite = [];
+  const surVisibilite = () => visibilite.push({ etat: document.visibilityState, t: new Date().toISOString() });
+  document.addEventListener('visibilitychange', surVisibilite);
+  const acquis = await garderEcranAllume(true);
+  const debut = Date.now();
+  const cle = modeAffichage;
+  const base = Object.assign({}, rapport.tests.t7);
+  base[cle] = { wakeLockAcquis: acquis, batterieDebut: Number($('[data-t7-start]').value) || null, debut: new Date(debut).toISOString(), termine: false };
+  enregistrerTest('t7', base, 'partiel');
+  // Compte à rebours affiché ; on mesure aussi les « sauts » d'horloge
+  // (page suspendue = l'intervalle ne tourne plus, l'écart dépasse 1 s)
+  let dernierTic = Date.now();
+  let plusGrosTrouMs = 0;
+  await new Promise((resolve) => {
+    const iv = setInterval(() => {
+      const maintenant = Date.now();
+      plusGrosTrouMs = Math.max(plusGrosTrouMs, maintenant - dernierTic);
+      dernierTic = maintenant;
+      const reste = Math.max(0, dureeMs - (maintenant - debut));
+      const mm = Math.floor(reste / 60000), ss = Math.floor((reste % 60000) / 1000);
+      scene('repos', mm + ':' + String(ss).padStart(2, '0'), 'Wake lock : ' + (verrou && !verrou.released ? 'actif' : 'inactif'));
+      if (reste <= 0 || annulation) { clearInterval(iv); resolve(); }
+    }, 1000);
+  });
+  document.removeEventListener('visibilitychange', surVisibilite);
+  await garderEcranAllume(false);
+  const t7 = Object.assign({}, rapport.tests.t7);
+  t7[cle] = Object.assign({}, t7[cle], {
+    termine: !annulation,
+    dureeReelleMin: Math.round((Date.now() - debut) / 6000) / 10,
+    plusGrosTrouHorlogeMs: plusGrosTrouMs,
+    evenementsWakeLock: evenementsVerrou.slice(),
+    visibilite,
+    ecranResteAllume: acquis && !evenementsVerrou.some((e) => e.type === 'relache' && e.visible === 'visible') && plusGrosTrouMs < 5000
+  });
+  enregistrerTest('t7', t7, 'partiel');
+  afficherT7();
+  if (!annulation) { await signal('end'); await dire('Test écran terminé. Note le pourcentage de batterie.'); }
+  finirTest();
+}
+function t7Batterie() {
+  const t7 = Object.assign({}, rapport.tests.t7);
+  const cle = modeAffichage;
+  t7[cle] = Object.assign({}, t7[cle]);
+  const d = Number($('[data-t7-start]').value);
+  const f = Number($('[data-t7-end]').value);
+  if (d) t7[cle].batterieDebut = d;
+  if (f) t7[cle].batterieFin = f;
+  if (t7[cle].batterieDebut && t7[cle].batterieFin) t7[cle].consommationPct = t7[cle].batterieDebut - t7[cle].batterieFin;
+  const deuxModes = t7['onglet-safari'] && t7['webapp-ecran-accueil'] && t7['onglet-safari'].termine && t7['webapp-ecran-accueil'].termine;
+  enregistrerTest('t7', t7, deuxModes ? 'fait' : 'partiel');
+  afficherT7();
+}
+function afficherT7() {
+  const t7 = rapport.tests.t7 || {};
+  afficherResultat('t7', ['onglet-safari', 'webapp-ecran-accueil'].filter((k) => t7[k]).map((k) => {
+    const r = t7[k];
+    return k + ' · wake lock : ' + (r.wakeLockAcquis ? 'acquis' : 'non') + ' · terminé : ' + (r.termine ? 'oui' : 'non') +
+      '\n    écran resté allumé : ' + (r.ecranResteAllume === undefined ? '—' : r.ecranResteAllume ? 'oui' : 'non') +
+      ' · plus gros trou : ' + (r.plusGrosTrouHorlogeMs || '—') + ' ms' +
+      '\n    batterie : ' + (r.batterieDebut || '?') + ' → ' + (r.batterieFin || '?') + ' %' + (r.consommationPct !== undefined ? ' (−' + r.consommationPct + ')' : '');
+  }).join('\n'));
+}
+
+/* =====================================================================
+   T8 · Écouteurs : volume après écoute, bouton de tige (Media Session)
+   ===================================================================== */
+const appuisMedia = [];
+async function t8Volume() {
+  if (!demarrerTest('t8')) return;
+  const phrase = 'Première lecture. Écoute bien le volume de cette phrase.';
+  await dire(phrase);
+  await signal('go');
+  await ecouter({ dureeMs: 4000, continuous: false, unCoup: true });
+  await signal('end');
+  await attendre(300);
+  await dire('Deuxième lecture. Écoute bien le volume de cette phrase.');
+  journal('T8 : compare les deux volumes et coche la case si la 2ᵉ est plus faible', 'ok');
+  finirTest();
+}
+// Génère un WAV silencieux de 1 s en mémoire : iOS n'attribue les
+// commandes média qu'à une page qui joue réellement un média.
+function wavSilencieux() {
+  const frequence = 8000, n = frequence;
+  const buf = new ArrayBuffer(44 + n * 2);
+  const v = new DataView(buf);
+  const ecrire = (o, s) => { for (let i = 0; i < s.length; i++) v.setUint8(o + i, s.charCodeAt(i)); };
+  ecrire(0, 'RIFF'); v.setUint32(4, 36 + n * 2, true); ecrire(8, 'WAVE'); ecrire(12, 'fmt ');
+  v.setUint32(16, 16, true); v.setUint16(20, 1, true); v.setUint16(22, 1, true);
+  v.setUint32(24, frequence, true); v.setUint32(28, frequence * 2, true); v.setUint16(32, 2, true); v.setUint16(34, 16, true);
+  ecrire(36, 'data'); v.setUint32(40, n * 2, true);
+  return URL.createObjectURL(new Blob([buf], { type: 'audio/wav' }));
+}
+let audioMedia = null;
+async function t8Media() {
+  debloquerAudio();
+  if (!('mediaSession' in navigator)) { journal('Media Session absente', 'error'); return; }
+  if (!audioMedia) {
+    audioMedia = new Audio(wavSilencieux());
+    audioMedia.loop = true;
+  }
+  try { await audioMedia.play(); journal('Média silencieux en lecture', 'ok'); } catch (e) { journal('Lecture média refusée : ' + e.message, 'error'); }
+  navigator.mediaSession.metadata = new MediaMetadata({ title: 'Fluence · test tige', artist: 'Spike' });
+  ['play', 'pause', 'stop', 'nexttrack', 'previoustrack', 'seekforward', 'seekbackward'].forEach((action) => {
+    try {
+      navigator.mediaSession.setActionHandler(action, () => {
+        appuisMedia.push({ action, t: new Date().toISOString() });
+        journal('Tige / commande média : ' + action, 'ok');
+        signal('hit');
+        // Garder la lecture active pour continuer à recevoir les commandes
+        if (action === 'pause' || action === 'play') audioMedia.play().catch(() => {});
+        t8Enregistrer(true);
+      });
+    } catch (e) { journal('Action ' + action + ' non gérée', 'warn'); }
+  });
+  journal('Session média prête : appuie sur la tige (simple, double, triple)');
+}
+function t8Enregistrer(silencieux) {
+  const obs = {};
+  $$('[data-t8]').forEach((el) => { obs[el.dataset.t8] = el.type === 'checkbox' ? el.checked : el.value; });
+  obs.appuisMedia = appuisMedia.slice();
+  enregistrerTest('t8', obs, 'fait');
+  if (!silencieux) journal('T8 enregistré', 'ok');
+  afficherResultat('t8', 'Commandes média reçues : ' + (appuisMedia.map((a) => a.action).join(', ') || 'aucune'));
+}
+
+/* =====================================================================
+   Copie du rapport (presse-papiers, avec repli execCommand)
+   ===================================================================== */
+async function copierRapport() {
+  sauver();
+  const json = JSON.stringify(rapport, null, 2);
+  const zone = $('[data-json]');
+  zone.value = json;
+  try {
+    await navigator.clipboard.writeText(json);
+    journal('Rapport copié (' + json.length + ' caractères)', 'ok');
+  } catch (e) {
+    zone.classList.remove('hide');
+    zone.focus();
+    zone.select();
+    zone.setSelectionRange(0, json.length);
+    const ok = document.execCommand && document.execCommand('copy');
+    journal(ok ? 'Rapport copié (repli)' : 'Copie impossible : sélectionne le texte affiché', ok ? 'ok' : 'error');
+  }
+}
+
+/* =====================================================================
+   Branchement des boutons
+   ===================================================================== */
+const actions = {
+  'copy': copierRapport,
+  'unlock': () => { debloquerAudio(); signal('go'); journal('Audio débloqué', 'ok'); },
+  'show-json': () => { sauver(); const z = $('[data-json]'); z.value = JSON.stringify(rapport, null, 2); z.classList.toggle('hide'); },
+  'reset': () => {
+    if (!confirm('Effacer tous les résultats enregistrés sur ce téléphone ?')) return;
+    rapport = nouveauRapport(); sauver(); location.reload();
+  },
+  'abort': () => {
+    annulation = true;
+    speechSynthesis.cancel();
+    if (ecouteEnCours) ecouteEnCours.stop();
+    journal('Arrêt demandé', 'warn');
+  },
+  't1-list': t1Lister,
+  't1-run': t1Lire,
+  't2-manual': () => listeManuelle('t2'),
+  't2-auto': () => listeAuto('t2'),
+  't2-next': () => listeMotSuivant('t2'),
+  't3-a': () => t3('A'),
+  't3-b': () => t3('B'),
+  't4-run': t4,
+  't5-run': t5,
+  't6-run': t6,
+  't7-run': t7,
+  't7-save': t7Batterie,
+  't8-volume': t8Volume,
+  't8-media': t8Media,
+  't8-save': () => t8Enregistrer(false),
+  't9-auto': () => listeAuto('t9'),
+  't9-manual': () => listeManuelle('t9'),
+  't9-next': () => listeMotSuivant('t9'),
+  't10-run': t10,
+  't10-save': t10Notes
+};
+document.addEventListener('click', (e) => {
+  const bouton = e.target.closest('[data-action]');
+  if (!bouton) return;
+  const f = actions[bouton.dataset.action];
+  if (f) Promise.resolve(f()).catch((err) => { journal('Exception : ' + err.message, 'error'); finirTest(); });
+});
+
+/* =====================================================================
+   Démarrage : restaure l'affichage des tests déjà faits
+   ===================================================================== */
+(function init() {
+  sauver();
+  $('[data-display-mode]').textContent = modeAffichage;
+  $('[data-meta]').textContent = modeAffichage + ' · ASR : ' + rapport.environnement.speechRecognition +
+    ' · wakeLock : ' + (rapport.environnement.wakeLock ? 'oui' : 'non') + ' · ' + (navigator.onLine ? 'en ligne' : 'hors ligne');
+  Object.keys(rapport.tests).forEach((id) => afficherBadge(id, rapport.tests[id].statut));
+  if (rapport.tests.t7) afficherT7();
+  if (rapport.tests.t10 && rapport.tests.t10.zonesBlanches) $('[data-t10-spots]').value = rapport.tests.t10.zonesBlanches;
+  if (rapport.tests.t9 && rapport.tests.t9.conditions) $('[data-t9-conditions]').value = rapport.tests.t9.conditions;
+  if (rapport.tests.t8) $$('[data-t8]').forEach((el) => {
+    const v = rapport.tests.t8[el.dataset.t8];
+    if (v !== undefined) { if (el.type === 'checkbox') el.checked = v; else el.value = v; }
+  });
+  ['t2', 't9'].forEach((id) => {
+    const r = rapport.tests[id];
+    if (r && r.mots) {
+      listes[id] = { mode: r.mode, index: r.mots.length, mots: r.mots };
+      afficherListe(id);
+      afficherResultat(id, 'Mode ' + r.mode + ' · ' + r.corrects + ' / ' + r.testes + ' corrects (' + r.tauxPct + ' %)');
+    }
+  });
+  if (!SR) journal('SpeechRecognition absent de ce navigateur', 'error');
+  if ('speechSynthesis' in window) listerVoix().then((v) => journal(v.length + ' voix système détectées'));
+  journal('Prêt · ' + modeAffichage);
+})();
+</script>
+</body>
+</html>
